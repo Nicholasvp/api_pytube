@@ -21,7 +21,7 @@ def baixar_audio(url):
             'preferredquality': '192',
         }],
         'outtmpl': '%(title)s.%(ext)s',
-        'cookiefile': 'cookies.txt'  
+        'cookie': cookies_data  
     }
 
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
