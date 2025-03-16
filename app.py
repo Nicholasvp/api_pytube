@@ -9,6 +9,7 @@ app = Flask(__name__)
 def baixar_audio(url):
     ydl_opts = {
         'format': 'bestaudio/best',
+        'cookies': 'cookies.txt',
         'postprocessors': [{
             'key': 'FFmpegExtractAudio',
             'preferredcodec': 'mp3',
