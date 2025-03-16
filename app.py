@@ -7,9 +7,20 @@ import tempfile
 app = Flask(__name__)
 
 def baixar_audio(url):
+    # Lê a variável de ambiente COOKIES_DATA
+    cookies_data = os.getenv('COOKIES_DATA')
+    
+    if cookies_data:
+        # Cria um arquivo temporário para os cookies
+        cookies_path = tempfile.mktemp()
+        with open(cookies_path, 'w') as f:
+            f.write(cookies_data)
+    else:
+        cookies_path = None  # Não usará cookies se a variável não for encontrada
+    
     ydl_opts = {
         'format': 'bestaudio/best',
-        'cookies': 'cookies.txt',
+        'cookies': cookies_path,  # Usando cookies a partir do arquivo temporário
         'postprocessors': [{
             'key': 'FFmpegExtractAudio',
             'preferredcodec': 'mp3',
