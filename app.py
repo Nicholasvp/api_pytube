@@ -1,18 +1,12 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_file
 import yt_dlp
+import io
 import os
+import tempfile
 
 app = Flask(__name__)
 
 def baixar_audio(url):
-    cookies_data = os.getenv("COOKIES_DATA")
-    
-    if not cookies_data:
-        raise ValueError("Erro: Variável de ambiente 'COOKIES_DATA' não encontrada.")
-    
-    with open("cookies.txt", "w", encoding="utf-8") as f:
-        f.write(cookies_data)
-
     ydl_opts = {
         'format': 'bestaudio/best',
         'postprocessors': [{
@@ -20,14 +14,16 @@ def baixar_audio(url):
             'preferredcodec': 'mp3',
             'preferredquality': '192',
         }],
-        'outtmpl': '%(title)s.%(ext)s',
-        'cookie': cookies_data  
+        'outtmpl': os.path.join(tempfile.gettempdir(), '%(title)s.%(ext)s'),
+        'quiet': True,
+        'no_warnings': True,
     }
 
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-        ydl.download([url])
+        info_dict = ydl.extract_info(url, download=True)
+        file_path = ydl.prepare_filename(info_dict).replace('.webm', '.mp3').replace('.m4a', '.mp3')
 
-    os.remove("cookies.txt")
+    return file_path
 
 @app.route('/download_audio', methods=['POST'])
 def download_audio():
@@ -37,8 +33,8 @@ def download_audio():
         return jsonify({'error': 'URL is required'}), 400
 
     try:
-        baixar_audio(url)
-        return jsonify({'message': 'Download concluído.'}), 200
+        file_path = baixar_audio(url)
+        return send_file(file_path, as_attachment=True, download_name='audio.mp3', mimetype='audio/mpeg')
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
